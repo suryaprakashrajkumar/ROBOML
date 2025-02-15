@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 from casadi import SX, vertcat, Opti
 
 # Parameters
@@ -52,14 +52,17 @@ nx = 3  # Number of states (x, y, theta)
 nu = 2  # Number of inputs (linear and angular velocities)
 
 # Define cost matrices
-Q_cost = np.diag([100, 100, 10])
-R_cost = np.diag([0.1, 0.1])
+Q_cost = np.diag([500, 500, 10])
+R_cost = np.diag([0.2, 0.2])
 
 # Input constraints based on wheel speeds
 v_min = -r * wrlmax
 v_max = r * wrlmax
-omega_min = -2 * wrlmax / d
-omega_max = 2 * wrlmax / d
+omega_min = - wrlmax / d
+omega_max =  wrlmax *r / d
+
+print(omega_max)
+print(v_max)
 
 # Initialize plot
 plt.figure()
