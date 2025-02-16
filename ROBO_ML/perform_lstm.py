@@ -65,12 +65,12 @@ class CombinedLoss(nn.Module):
 csv_file = 'data_nmpc.csv'  # Path to your CSV file
 seq_length =30
 overlap = 5
-batch_size = 32
+batch_size = 16
 input_size = 36
 output_size = 53
 hidden_size = 256
 num_layers = 3
-num_epochs = 100000
+num_epochs = 200000
 learning_rate = 0.00001
 
 # Dataset and DataLoader
@@ -80,7 +80,7 @@ dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 # Initialize model, loss function, optimizer, and scheduler
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = AttentionLSTM(input_size, hidden_size, output_size, num_layers).to(device)
-criterion = CombinedLoss(alpha=0.9)
+criterion = CombinedLoss(alpha=0.5)
 optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-6)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50)
 scaler = torch.cuda.amp.GradScaler()  # For mixed precision training
