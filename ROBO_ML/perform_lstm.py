@@ -70,7 +70,7 @@ input_size = 36
 output_size = 53
 hidden_size = 256
 num_layers = 3
-num_epochs = 10000
+num_epochs = 100000
 learning_rate = 0.00001
 
 # Dataset and DataLoader
@@ -166,6 +166,16 @@ def test_model(test_csv_file, model, batch_size=128, input_size=36, output_size=
 
 # Example usage
 test_csv_file = 'data_nmpc.csv'  # Path to your test data CSV file
+predictions, true_values, time_taken = test_model(test_csv_file, model)
+print(f"Time taken for prediction: {time_taken:.6f} seconds")
+# Optionally, visualize predictions vs true values
+plt.figure()
+plt.plot(true_values[:200,33], label='True Values')  # First 100 samples
+plt.plot(predictions[:200,33], label='Predictions')  # First 100 predictions
+plt.legend()
+plt.show()
+
+test_csv_file = 'data_nmpc_test.csv'  # Path to your test data CSV file
 predictions, true_values, time_taken = test_model(test_csv_file, model)
 print(f"Time taken for prediction: {time_taken:.6f} seconds")
 # Optionally, visualize predictions vs true values
