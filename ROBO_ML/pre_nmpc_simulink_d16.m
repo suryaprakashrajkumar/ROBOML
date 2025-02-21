@@ -6,13 +6,8 @@ d = 0.393;
 wrwlmax = 10.0;
 
 
-<<<<<<< Updated upstream
-eta = 1.6;
-alpha = 5.6;
-=======
-eta = 1.2;
-alpha = 4.9;
->>>>>>> Stashed changes
+eta = 1.1;
+alpha = 4;
 N = 20;
 Q_cost = diag([100, 100, 10]);
 R_cost = diag([1.7, 0.1]);
