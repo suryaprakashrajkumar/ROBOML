@@ -1,16 +1,16 @@
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 from casadi import SX, vertcat, Opti
 
 # Parameters
-ts = 1 / 30  # Sampling time
-r = 0.0205  # Wheel radius
-d = 0.053  # Distance between wheels
+ts = 1 / 60  # Sampling time
+r = 0.04445  # Wheel radius
+d = 0.393 # Distance between wheels
 wrlmax = 10  # Maximum wheel speed (rad/s)
 
 # Trajectory definition
-eta = 0.6
-alpha = 3.5
+eta = 0.8
+alpha = 5.5
 k = np.arange(0, 2 * np.pi * alpha * 2, ts)
 xr = eta * np.sin(k / alpha)
 yr = eta * np.sin(k / (2 * alpha))
@@ -52,17 +52,14 @@ nx = 3  # Number of states (x, y, theta)
 nu = 2  # Number of inputs (linear and angular velocities)
 
 # Define cost matrices
-Q_cost = np.diag([500, 500, 10])
-R_cost = np.diag([0.2, 0.2])
+Q_cost = np.diag([100, 100, 10])
+R_cost = np.diag([0.1, 0.1])
 
 # Input constraints based on wheel speeds
 v_min = -r * wrlmax
 v_max = r * wrlmax
-omega_min = - wrlmax / d
-omega_max =  wrlmax *r / d
-
-print(omega_max)
-print(v_max)
+omega_min = -2 * wrlmax / d
+omega_max = 2 * wrlmax / d
 
 # Initialize plot
 plt.figure()
@@ -136,7 +133,13 @@ for t_idx in range(len(k) - N):
         u_opt = sol.value(u)
 
         # Update state and plot trajectory
-        Q = x_opt[:, 1]
+        # Q = x_opt[:, 1]
+        Qnext = Q + ts * vertcat(
+            u_opt[0, 0] * np.cos(Q[2]),
+            u_opt[0, 0] * np.sin(Q[2]),
+            u_opt[1, 0]
+        )
+        Q = Qnext
         state_log.append(Q)
         control_log.append(u_opt[:, 0])
         robot_path.set_xdata(np.append(robot_path.get_xdata(), Q[0]))

@@ -48,7 +48,7 @@ def predict_waypoints(eta, alpha, ts, N, t_current):
 
 # Example usage
 eta = 3.5
-alpha = 5.5
+alpha = 15.5
 ts = 1/60
 N = 100  # Prediction horizon
 t_current = 0.0  # Example current time
