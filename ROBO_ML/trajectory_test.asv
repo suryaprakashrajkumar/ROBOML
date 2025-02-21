@@ -2,8 +2,8 @@
 %Initial conditions
 %scaling factor of the trajectory
 Ts = 1/60;
-eta=1.4;
-alpha=6;
+eta=1.7;
+alpha=5.8;
 k=0:Ts:2*pi*alpha*2-Ts;
 xr=eta*sin(k/alpha);
 yr=eta*sin(k/(2*alpha));
