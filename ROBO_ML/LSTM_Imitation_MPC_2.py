@@ -14,16 +14,12 @@ import os
 logging.basicConfig(filename='training_log.txt', level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Dataset class to load time-series data from multiple CSV files
+# Dataset class to load time-series data from a single CSV file
 class TimeSeriesDataset(Dataset):
-    def __init__(self, csv_files, seq_length, input_size, output_size):
-        data_list = []
-        for file in csv_files:
-            data = pd.read_csv(file).values
-            data_list.append(data)
-        self.data = np.concatenate(data_list, axis=0)  # Concatenate all data
+    def __init__(self, csv_file, seq_length, input_size, output_size):
+        data = pd.read_csv(csv_file).values
         self.scaler = MinMaxScaler()
-        self.data = self.scaler.fit_transform(self.data)  # Normalize the entire dataset
+        self.data = self.scaler.fit_transform(data)  # Normalize the dataset
         self.seq_length = seq_length
         self.input_size = input_size
         self.output_size = output_size
@@ -76,20 +72,13 @@ input_size = 63
 output_size = 40
 hidden_size = 512
 num_layers = 3
-num_epochs = 200
-learning_rate = 0.0001
-batch_size = 128
+num_epochs = 20000
+learning_rate = 0.00001
+batch_size = 256
 
 # Initialize dataset and dataloaders for training and validation
 train_csv_files = [f'Data/D{i}.csv' for i in range(1, 19)]  # D1 to D18 for training
 val_csv_files = ['Data/D19.csv', 'Data/D20.csv']  # D19 and D20 for validation
-
-# Initialize datasets
-train_dataset = TimeSeriesDataset(train_csv_files, seq_length, input_size, output_size)
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-
-val_dataset = TimeSeriesDataset(val_csv_files, seq_length, input_size, output_size)
-val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 # Initialize model, loss function, optimizer, and scheduler
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -109,23 +98,28 @@ for epoch in range(num_epochs):
     correct = 0
     total = 0
 
-    for inputs, targets in train_dataloader:
-        inputs, targets = inputs.to(device), targets.to(device)
+    # Train on each CSV file independently
+    for file in train_csv_files:
+        train_dataset = TimeSeriesDataset(file, seq_length, input_size, output_size)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-        # Forward pass and loss computation
-        outputs = model(inputs)
-        loss = criterion(outputs, targets)
+        for inputs, targets in train_dataloader:
+            inputs, targets = inputs.to(device), targets.to(device)
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            # Forward pass and loss computation
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
 
-        total_loss += loss.item()
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        # Compute accuracy based on t4 (compare predicted vs actual t4)
-        threshold = 0.01
-        correct += (torch.abs(outputs - targets) < threshold).sum().item()
-        total += targets.numel()
+            total_loss += loss.item()
+
+            # Compute accuracy based on t4 (compare predicted vs actual t4)
+            threshold = 0.01
+            correct += (torch.abs(outputs - targets) < threshold).sum().item()
+            total += targets.numel()
 
     avg_loss = total_loss / len(train_dataloader)
     accuracy = 100 * correct / total
@@ -137,72 +131,86 @@ for epoch in range(num_epochs):
     total_val = 0
 
     with torch.no_grad():
-        for inputs, targets in val_dataloader:
-            inputs, targets = inputs.to(device), targets.to(device)
-            outputs = model(inputs)
-            loss = criterion(outputs, targets)
-            val_loss += loss.item()
+        for file in val_csv_files:
+            val_dataset = TimeSeriesDataset(file, seq_length, input_size, output_size)
+            val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
-            # Compute validation accuracy based on t4
-            correct_val += (torch.abs(outputs - targets) < threshold).sum().item()
-            total_val += targets.numel()
+            for inputs, targets in val_dataloader:
+                inputs, targets = inputs.to(device), targets.to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, targets)
+                val_loss += loss.item()
+
+                # Compute validation accuracy based on t4
+                correct_val += (torch.abs(outputs - targets) < threshold).sum().item()
+                total_val += targets.numel()
 
     avg_val_loss = val_loss / len(val_dataloader)
     val_accuracy = 100 * correct_val / total_val
 
-    logging.info(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%")
+    # Log and print progress
+    logging.info(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}, Training Accuracy: {accuracy:.2f}%")
     logging.info(f"Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%")
+    print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}, Training Accuracy: {accuracy:.2f}%")
+    print(f"Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%")
 
     # Save model if validation accuracy improves
     if val_accuracy > best_val_accuracy:
         best_val_accuracy = val_accuracy
         torch.save(model.state_dict(), "best_model.pth")
         logging.info(f"Model saved with Validation Accuracy: {val_accuracy:.2f}%")
+        print(f"Model saved with Validation Accuracy: {val_accuracy:.2f}%")
 
     scheduler.step()  # Step the learning rate scheduler
 
 # Load the best model after training
 model.load_state_dict(torch.load("best_model.pth"))
 logging.info("Best model loaded for testing.")
+print("Best model loaded for testing.")
 
 # Testing function
 def test_model(test_csv_files, model, batch_size=16, input_size=63, output_size=40):
-    test_dataset = TimeSeriesDataset(test_csv_files, seq_length, input_size, output_size)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-    model.eval()
+    test_predictions = []
+    true_values = []
     total_loss = 0.0
     correct = 0
     total = 0
-    predictions = []
-    true_values = []
     start_time = time.time()
 
+    model.eval()
+
     with torch.no_grad():
-        for inputs, targets in test_dataloader:
-            inputs, targets = inputs.to(device), targets.to(device)
-            outputs = model(inputs)
-            loss = criterion(outputs, targets)
-            total_loss += loss.item()
+        for file in test_csv_files:
+            test_dataset = TimeSeriesDataset(file, seq_length, input_size, output_size)
+            test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-            predictions.append(outputs.cpu().numpy())
-            true_values.append(targets.cpu().numpy())
+            for inputs, targets in test_dataloader:
+                inputs, targets = inputs.to(device), targets.to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, targets)
+                total_loss += loss.item()
 
-            correct += (torch.abs(outputs - targets) < 0.01).sum().item()
-            total += targets.numel()
+                test_predictions.append(outputs.cpu().numpy())
+                true_values.append(targets.cpu().numpy())
+
+                correct += (torch.abs(outputs - targets) < 0.01).sum().item()
+                total += targets.numel()
 
     end_time = time.time()
     time_taken = end_time - start_time
     avg_loss = total_loss / len(test_dataloader)
     accuracy = 100 * correct / total
 
-    predictions = np.concatenate(predictions, axis=0)
+    # Flatten lists of predictions and true values
+    test_predictions = np.concatenate(test_predictions, axis=0)
     true_values = np.concatenate(true_values, axis=0)
 
     logging.info(f"Test Loss: {avg_loss:.4f}, Test Accuracy: {accuracy:.2f}%")
     logging.info(f"Time taken for testing: {time_taken:.6f} seconds")
+    print(f"Test Loss: {avg_loss:.4f}, Test Accuracy: {accuracy:.2f}%")
+    print(f"Time taken for testing: {time_taken:.6f} seconds")
 
-    return predictions, true_values, time_taken
+    return test_predictions, true_values, time_taken
 
 # Test the model
 test_csv_files = ['Data/D19.csv', 'Data/D20.csv']
