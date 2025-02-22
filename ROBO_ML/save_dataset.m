@@ -56,7 +56,7 @@ for j = 1:20
 end
 
 % Write to CSV file
-csvFileName = 'D1.csv';
+csvFileName = 'D2.csv';
 writematrix([headers; num2cell(csvData)], csvFileName);
 
 disp('CSV file saved successfully.');

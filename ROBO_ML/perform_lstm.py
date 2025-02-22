@@ -62,14 +62,14 @@ class CombinedLoss(nn.Module):
         return self.alpha * self.mse(y_pred, y_true) + (1 - self.alpha) * self.huber(y_pred, y_true) * 100
 
 # Parameters
-csv_file = 'data_nmpc.csv'  # Path to your CSV file
-seq_length =5
-overlap =3
+csv_file = 'Data\D1.csv'  # Path to your CSV file data_nmpc.csv'
+seq_length =10
+overlap =5
 batch_size = 16
-input_size = 36
-output_size = 53
-hidden_size = 256
-num_layers = 3
+input_size = 63
+output_size = 40
+hidden_size = 512
+num_layers = 5
 num_epochs = 20000
 learning_rate = 0.00001
 
@@ -95,7 +95,7 @@ for epoch in range(num_epochs):
     for inputs, targets in dataloader:
         inputs, targets = inputs.to(device), targets.to(device)
 
-        with torch.cuda.amp.autocast():  # Mixed precision training
+        with torch.cuda.amp.autocast():  
             outputs = model(inputs)  # Final time step prediction
             loss = criterion(outputs, targets)
 
@@ -118,7 +118,7 @@ for epoch in range(num_epochs):
 
 
 
-def test_model(test_csv_file, model, batch_size=128, input_size=36, output_size=53):
+def test_model(test_csv_file, model, batch_size=128, input_size=63, output_size=40):
     # Load test data
     test_dataset = OverlapTimeSeriesDataset(test_csv_file, seq_length, overlap, input_size, output_size)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -165,12 +165,12 @@ def test_model(test_csv_file, model, batch_size=128, input_size=36, output_size=
     return predictions, true_values, time_taken
 
 # Example usage
-test_csv_file = 'data_nmpc_test.csv'  # Path to your test data CSV file
+test_csv_file = 'Data\D2.csv'  # Path to your test data CSV file data_nmpc_test.csv
 predictions, true_values, time_taken = test_model(test_csv_file, model)
 print(f"Time taken for prediction: {time_taken:.6f} seconds")
 # Optionally, visualize predictions vs true values
 plt.figure()
-plt.plot(true_values[:200,33], label='True Values')  # First 100 samples
-plt.plot(predictions[:200,33], label='Predictions')  # First 100 predictions
+plt.plot(true_values[:200,1], label='True Values')  # First 100 samples
+plt.plot(predictions[:200,1], label='Predictions')  # First 100 predictions
 plt.legend()
 plt.show()
