@@ -1,0 +1,24 @@
+Epoch,Loss,Accuracy
+1,0.9147,5.72
+2,0.2739,8.84
+3,0.2352,8.09
+4,0.1353,12.95
+5,0.1174,15.52
+2025-02-22 13:03:46,566 - INFO - Training started with 200 epochs, learning rate 0.0001, batch size 128
+2025-02-22 13:04:06,515 - INFO - Epoch [1/200], Loss: 0.2827, Accuracy: 12.35%
+2025-02-22 13:04:06,515 - INFO - Validation Loss: 0.1539, Validation Accuracy: 12.64%
+2025-02-22 13:04:06,588 - INFO - Model saved with Validation Accuracy: 12.64%
+2025-02-22 13:04:26,165 - INFO - Epoch [2/200], Loss: 0.0766, Accuracy: 22.36%
+2025-02-22 13:04:26,165 - INFO - Validation Loss: 0.1334, Validation Accuracy: 11.67%
+2025-02-22 13:04:45,935 - INFO - Epoch [3/200], Loss: 0.0548, Accuracy: 28.29%
+2025-02-22 13:04:45,935 - INFO - Validation Loss: 0.1192, Validation Accuracy: 13.92%
+2025-02-22 13:04:46,001 - INFO - Model saved with Validation Accuracy: 13.92%
+2025-02-22 13:05:05,877 - INFO - Epoch [4/200], Loss: 0.0483, Accuracy: 30.93%
+2025-02-22 13:05:05,877 - INFO - Validation Loss: 0.1105, Validation Accuracy: 14.50%
+2025-02-22 13:05:05,943 - INFO - Model saved with Validation Accuracy: 14.50%
+2025-02-22 13:05:25,917 - INFO - Epoch [5/200], Loss: 0.0440, Accuracy: 32.73%
+2025-02-22 13:05:25,917 - INFO - Validation Loss: 0.1074, Validation Accuracy: 13.65%
+2025-02-22 13:05:45,746 - INFO - Epoch [6/200], Loss: 0.0414, Accuracy: 34.69%
+2025-02-22 13:05:45,746 - INFO - Validation Loss: 0.1118, Validation Accuracy: 12.46%
+2025-02-22 13:06:06,271 - INFO - Epoch [7/200], Loss: 0.0398, Accuracy: 35.87%
+2025-02-22 13:06:06,272 - INFO - Validation Loss: 0.1139, Validation Accuracy: 14.29%
