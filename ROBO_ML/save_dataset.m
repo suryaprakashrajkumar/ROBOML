@@ -1,3 +1,4 @@
+load("Data\20d.mat")
 % Extract data from Simulink 'out' variable
 time = out.tout; % Extract time vector
 xr = out.xr.Data; % Extract xr values
@@ -56,7 +57,7 @@ for j = 1:20
 end
 
 % Write to CSV file
-csvFileName = 'D2.csv';
+csvFileName = 'D20.csv';
 writematrix([headers; num2cell(csvData)], csvFileName);
 
 disp('CSV file saved successfully.');
