@@ -63,8 +63,8 @@ class CombinedLoss(nn.Module):
 
 # Parameters
 csv_file = 'Data\D1.csv'  # Path to your CSV file data_nmpc.csv'
-seq_length =10
-overlap =4
+seq_length =5
+overlap =0
 batch_size = 16
 input_size = 63
 output_size = 40
@@ -118,7 +118,7 @@ for epoch in range(num_epochs):
 
 
 
-def test_model(test_csv_file, model, batch_size=128, input_size=63, output_size=40):
+def test_model(test_csv_file, model, batch_size=16, input_size=63, output_size=40):
     # Load test data
     test_dataset = OverlapTimeSeriesDataset(test_csv_file, seq_length, overlap, input_size, output_size)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -166,6 +166,28 @@ def test_model(test_csv_file, model, batch_size=128, input_size=63, output_size=
 
 # Example usage
 test_csv_file = 'Data\D2.csv'  # Path to your test data CSV file data_nmpc_test.csv
+predictions, true_values, time_taken = test_model(test_csv_file, model)
+print(f"Time taken for prediction: {time_taken:.6f} seconds")
+# Optionally, visualize predictions vs true values
+plt.figure()
+plt.plot(true_values[:200,1], label='True Values')  # First 100 samples
+plt.plot(predictions[:200,1], label='Predictions')  # First 100 predictions
+plt.legend()
+plt.show()
+
+# Example usage
+test_csv_file = 'Data\D12.csv'  # Path to your test data CSV file data_nmpc_test.csv
+predictions, true_values, time_taken = test_model(test_csv_file, model)
+print(f"Time taken for prediction: {time_taken:.6f} seconds")
+# Optionally, visualize predictions vs true values
+plt.figure()
+plt.plot(true_values[:200,1], label='True Values')  # First 100 samples
+plt.plot(predictions[:200,1], label='Predictions')  # First 100 predictions
+plt.legend()
+plt.show()
+
+# Example usage
+test_csv_file = 'Data\D1.csv'  # Path to your test data CSV file data_nmpc_test.csv
 predictions, true_values, time_taken = test_model(test_csv_file, model)
 print(f"Time taken for prediction: {time_taken:.6f} seconds")
 # Optionally, visualize predictions vs true values

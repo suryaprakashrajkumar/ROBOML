@@ -49,38 +49,44 @@ class LSTMModel(nn.Module):
         return out
 
 # Parameters
-csv_file = 'D:\Research\ROBO_ML\data_nmpc.csv'  # Path to your CSV file
-seq_length = 30       # Sequence length for LSTM
-batch_size = 5      # Number of sequences per batch
-input_size = 36       # Number of input features
-output_size = 53      # Number of output features
+csv_file = 'Data\D1.csv'  # Path to your CSV file
+seq_length = 20       # Sequence length for LSTM
+batch_size = 32     # Number of sequences per batch
+input_size = 63       # Number of input features
+output_size = 40      # Number of output features
 
 # Dataset and DataLoader
 dataset = TimeSeriesDataset(csv_file, seq_length, input_size, output_size)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # Model parameters
-hidden_size = 128
-num_layers = 5
+hidden_size = 256
+num_layers = 4
 model = LSTMModel(input_size, hidden_size, output_size, num_layers)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
 
 # Loss function and optimizer
-# criterion  nn.MSELoss()
+# criterion =  nn.MSELoss()
 
-criterion = nn.HuberLoss(delta=100.0)
+criterion = nn.HuberLoss(delta=10.0)
 
-optimizer = optim.RMSprop(model.parameters(), lr=0.0001, alpha=0.99, weight_decay=1e-5, momentum=0.9)
+optimizer = optim.RMSprop(model.parameters(), lr=0.001, alpha=0.99, weight_decay=1e-5, momentum=0.9)
 
-# Training loop
-num_epochs = 1000
+# Dataset and DataLoader for validation
+val_csv_file = 'Data\D2.csv'  # Path to your validation CSV file
+val_dataset = TimeSeriesDataset(val_csv_file, seq_length, input_size, output_size)
+val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+# Training loop with validation
+num_epochs = 10000
 for epoch in range(num_epochs):
     model.train()
     total_loss = 0.0
     correct = 0
     total = 0
 
+    # Training step
     for i, (inputs, targets) in enumerate(dataloader):
         inputs, targets = inputs.to(device), targets.to(device)
 
@@ -101,7 +107,33 @@ for epoch in range(num_epochs):
 
         total_loss += loss.item()
 
-    # Calculate average loss and accuracy
+    # Calculate average training loss and accuracy
     avg_loss = total_loss / len(dataloader) * 10
-    accuracy = 100 * correct / total
-    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%')
+    train_accuracy = 100 * correct / total
+
+    # Validation step
+    model.eval()  # Set the model to evaluation mode
+    val_loss = 0.0
+    val_correct = 0
+    val_total = 0
+
+    with torch.no_grad():  # Disable gradient calculation for validation
+        for inputs, targets in val_dataloader:
+            inputs, targets = inputs.to(device), targets.to(device)
+
+            # Forward pass
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+
+            # Compute validation accuracy
+            val_loss += loss.item()
+            val_correct += (torch.abs(outputs - targets) < threshold).sum().item()
+            val_total += targets.numel()
+
+    # Calculate average validation loss and accuracy
+    avg_val_loss = val_loss / len(val_dataloader)
+    val_accuracy = 100 * val_correct / val_total
+
+    # Print stats
+    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}, Accuracy: {train_accuracy:.2f}%'
+          f', Val Loss: {avg_val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%')
