@@ -59,19 +59,19 @@ class CombinedLoss(nn.Module):
         self.huber = nn.HuberLoss(delta=1.0)
 
     def forward(self, y_pred, y_true):
-        return self.alpha * self.mse(y_pred, y_true) + (1 - self.alpha) * self.huber(y_pred, y_true)
+        return self.alpha * self.mse(y_pred, y_true) + (1 - self.alpha) * self.huber(y_pred, y_true) * 100
 
 # Parameters
-csv_file = 'D:\Research\ROBO_ML\data_nmpc.csv'  # Path to your CSV file
-seq_length =30
-overlap = 5
-batch_size = 32
+csv_file = 'data_nmpc.csv'  # Path to your CSV file
+seq_length =5
+overlap =3
+batch_size = 16
 input_size = 36
 output_size = 53
 hidden_size = 256
 num_layers = 3
-num_epochs = 1000
-learning_rate = 0.001
+num_epochs = 20000
+learning_rate = 0.00001
 
 # Dataset and DataLoader
 dataset = OverlapTimeSeriesDataset(csv_file, seq_length, overlap, input_size, output_size)
@@ -80,7 +80,7 @@ dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 # Initialize model, loss function, optimizer, and scheduler
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = AttentionLSTM(input_size, hidden_size, output_size, num_layers).to(device)
-criterion = CombinedLoss(alpha=0.8)
+criterion = CombinedLoss(alpha=0.5)
 optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-6)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50)
 scaler = torch.cuda.amp.GradScaler()  # For mixed precision training
@@ -165,12 +165,12 @@ def test_model(test_csv_file, model, batch_size=128, input_size=36, output_size=
     return predictions, true_values, time_taken
 
 # Example usage
-test_csv_file = 'D:/Research/ROBO_ML/data_nmpc_test.csv'  # Path to your test data CSV file
+test_csv_file = 'data_nmpc_test.csv'  # Path to your test data CSV file
 predictions, true_values, time_taken = test_model(test_csv_file, model)
 print(f"Time taken for prediction: {time_taken:.6f} seconds")
 # Optionally, visualize predictions vs true values
 plt.figure()
-plt.plot(true_values[:200,10], label='True Values')  # First 100 samples
-plt.plot(predictions[:200,10], label='Predictions')  # First 100 predictions
+plt.plot(true_values[:200,33], label='True Values')  # First 100 samples
+plt.plot(predictions[:200,33], label='Predictions')  # First 100 predictions
 plt.legend()
 plt.show()
