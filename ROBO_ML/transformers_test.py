@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 import numpy as np
 import os
@@ -15,16 +16,18 @@ class RegressionDataset(Dataset):
         self.data = []
         self.input_size = input_size
         self.output_size = output_size
-
+        self.scaler = MinMaxScaler()
+        
         for file in file_list:
             df = pd.read_csv(file).values
             self.data.append(df)
 
         self.data = np.concatenate(self.data, axis=0)  # Stack all data
-        if scaler:
-            self.data = scaler.transform(self.data)
-        else:
-            self.scaler = None  # No scaling used
+        self.data = self.scaler.fit_transform(self.data)
+        # if scaler:
+        #     self.data = scaler.transform(self.data)
+        # else:
+        #     self.scaler = None  # No scaling used
 
     def __len__(self):
         return len(self.data)
@@ -38,7 +41,7 @@ class RegressionDataset(Dataset):
 # Transformer Model
 # ---------------------------
 class TransformerModel(nn.Module):
-    def __init__(self, input_size, output_size, hidden_dim=256, num_layers=4, num_heads=8, dropout=0.1):
+    def __init__(self, input_size, output_size, hidden_dim=256, num_layers=4, num_heads=8, dropout=0.4):
         super(TransformerModel, self).__init__()
         self.embedding = nn.Linear(input_size, hidden_dim)
         encoder_layer = nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=num_heads, dropout=dropout)
@@ -125,9 +128,9 @@ val_files = ["Data/D19.csv", "Data/D20.csv"]  # Validate on D19-D20
 # Hyperparameters
 input_size = 63
 output_size = 40
-batch_size = 128
-num_epochs = 100
-learning_rate = 0.00001
+batch_size = 64
+num_epochs = 50
+learning_rate = 0.000001
 
 # Load data
 train_dataset = RegressionDataset(train_files, input_size, output_size)
